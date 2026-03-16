@@ -4,8 +4,8 @@ This repository is my long-term DSA and interview prep workspace. Accepted solut
 
 ## Profiles
 
-- NeetCode: [Profile](https://neetcode.io/profile)
-- LeetCode: [Sush2411](https://leetcode.com/u/Sush2411/)
+[🚀](https://neetcode.io/profile) NeetCode Profile  
+[<img src="https://cdn.simpleicons.org/leetcode/FFA116" alt="LeetCode" width="18" />](https://leetcode.com/u/Sush2411/) LeetCode Profile
 
 ## Prep Roadmap
 
