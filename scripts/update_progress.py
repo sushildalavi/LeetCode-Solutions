@@ -1,96 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
-import os
-import re
-from pathlib import Path
+from repo_tools import ROOT, TRACK_LABELS, collect_solved_slugs, load_tracks
 
-ROOT = Path(__file__).resolve().parents[1]
 README_PATH = ROOT / "README.md"
-TRACKS_PATH = ROOT / "data" / "tracks.json"
 
 START_MARKER = "<!-- progress:begin -->"
 END_MARKER = "<!-- progress:end -->"
-
-TRACK_LABELS = {
-    "neetcode150": "NeetCode 150",
-    "neetcode250": "NeetCode 250",
-    "striverSdeSheetLeetCode": "Striver's SDE Sheet (LeetCode-backed)",
-}
-
-# Striver's sheet still contains a few legacy LeetCode URLs.
-ALIASES = {
-    "coin-change-2": "coin-change-ii",
-    "implement-strstr": "find-the-index-of-the-first-occurrence-in-a-string",
-}
-
-IGNORE_DIRS = {
-    ".git",
-    ".github",
-    ".venv",
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    "data",
-    "scripts",
-    "node_modules",
-    "venv",
-}
-
-
-def canonical_slug(slug: str) -> str:
-    normalized = normalize_candidate(slug)
-    return ALIASES.get(normalized, normalized)
-
-
-def normalize_candidate(value: str) -> str:
-    value = value.strip().lower()
-    value = value.replace("_", "-")
-    value = re.sub(r"^\d+[.\-_\s]+", "", value)
-    value = re.sub(r"[^a-z0-9]+", "-", value)
-    value = re.sub(r"-{2,}", "-", value).strip("-")
-    return value
-
-
-def load_tracks() -> dict[str, list[str]]:
-    raw = json.loads(TRACKS_PATH.read_text())
-    tracks: dict[str, list[str]] = {}
-    for name, slugs in raw.items():
-        deduped: list[str] = []
-        seen: set[str] = set()
-        for slug in slugs:
-            canonical = canonical_slug(slug)
-            if canonical in seen:
-                continue
-            seen.add(canonical)
-            deduped.append(canonical)
-        tracks[name] = deduped
-    return tracks
-
-
-def collect_solved_slugs(tracked_slugs: set[str]) -> set[str]:
-    solved: set[str] = set()
-
-    for current_root, dirnames, filenames in os.walk(ROOT):
-        dirnames[:] = [
-            dirname
-            for dirname in dirnames
-            if dirname not in IGNORE_DIRS and not dirname.startswith(".")
-        ]
-
-        for dirname in dirnames:
-            candidate = canonical_slug(dirname)
-            if candidate in tracked_slugs:
-                solved.add(candidate)
-
-        for filename in filenames:
-            stem = Path(filename).stem
-            candidate = canonical_slug(stem)
-            if candidate in tracked_slugs:
-                solved.add(candidate)
-
-    return solved
 
 
 def build_progress_block(tracks: dict[str, list[str]], solved: set[str]) -> str:
