@@ -1,77 +1,39 @@
 # LeetCode Solutions and Interview Prep
 
-This repository tracks my data structures and algorithms practice for technical interview preparation.
+This repository is my long-term DSA and interview prep workspace. Accepted solutions are synced from LeetCode through `LeetSync`, and the tracked sheet progress in this README is refreshed automatically from the synced problem folders and files.
 
-The plan is simple:
+## Profiles
+
+- NeetCode: [sushildalavi](https://neetcode.io/profile/sushildalavi)
+- LeetCode: _Add your public LeetCode profile URL here_
+
+## Prep Roadmap
 
 1. Finish `NeetCode 150`
 2. Move to `NeetCode 250`
 3. Complete `Striver's SDE Sheet`
-4. Continue with regular LeetCode and DSA practice for revision, speed, and pattern recognition
+4. Continue with regular DSA practice for revision, speed, and pattern recognition
 
-Solutions in this repository are synced from LeetCode using `LeetSync`, so this repo serves as both a progress log and a long-term archive of interview prep work.
+## Progress
 
-## Roadmap
+<!-- progress:begin -->
+| Track | Solved | Total | Progress |
+| --- | ---: | ---: | ---: |
+| NeetCode 150 | 0 | 150 | 0.0% |
+| NeetCode 250 | 0 | 250 | 0.0% |
+| Striver's SDE Sheet (LeetCode-backed) | 0 | 117 | 0.0% |
 
-| Phase | Track | Focus | Status |
-| --- | --- | --- | --- |
-| 1 | NeetCode 150 | Core interview patterns and must-know problems | In Progress |
-| 2 | NeetCode 250 | Wider medium and hard problem coverage | Planned |
-| 3 | Striver's SDE Sheet | Structured revision across core DSA topics | Planned |
-| 4 | Mixed Practice | Timed practice, weak-topic review, and consistency | Ongoing |
+Tracked unique problems solved across all sheets: `0 / 293`
+<!-- progress:end -->
 
-## Goals
+## How This Repo Updates
 
-- Build strong problem-solving fundamentals in DSA
-- Improve pattern recognition across common interview problem types
-- Write clean, efficient, interview-ready solutions
-- Track progress consistently over time
-- Create a reusable revision resource before interviews
+- Solve on `LeetCode`
+- Let `LeetSync` push the accepted submission into this repository
+- The `Update Progress` GitHub Action scans the synced solution names and refreshes the progress table in this README
 
-## What This Repository Will Contain
+## Notes
 
-- LeetCode problem solutions synced through `LeetSync`
-- Consistent practice across arrays, strings, linked lists, trees, graphs, dynamic programming, heaps, backtracking, and more
-- A growing archive of solved problems for revision
-- Progress tied to structured interview prep sheets rather than random practice
-
-## Current Prep Order
-
-`NeetCode 150` -> `NeetCode 250` -> `Striver's SDE Sheet` -> `Ongoing DSA Practice`
-
-## Problem-Solving Approach
-
-For each problem, the focus is to:
-
-1. Understand the brute-force solution first
-2. Identify the optimal pattern or data structure
-3. Implement a clean and readable solution
-4. Review time and space complexity
-5. Revisit difficult problems until the pattern becomes natural
-
-## Progress Tracker
-
-- NeetCode 150: `0 / 150`
-- NeetCode 250: `0 / 250`
-- Striver's SDE Sheet: `Not started`
-
-This section will be updated as the repository grows.
-
-## Why This Repo Exists
-
-This is not just a dump of accepted submissions. The goal is to build a disciplined interview prep system:
-
-- solve consistently
-- track progress publicly
-- revise weak areas
-- maintain a personal archive of patterns and solutions
-
-## Tools
-
-- `LeetCode`
-- `LeetSync`
-- `GitHub`
-
-## Long-Term Objective
-
-Use this repository as a structured record of interview preparation and a revision base for software engineering interviews.
+- `NeetCode 150` is a subset of `NeetCode 250`, so those counts intentionally overlap
+- `Striver's SDE Sheet` tracking only covers the LeetCode-backed problems from the official sheet
+- If a Striver problem is not solved on LeetCode, `LeetSync` cannot sync it into this repository
