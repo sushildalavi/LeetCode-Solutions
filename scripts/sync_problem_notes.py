@@ -16,6 +16,7 @@ from repo_tools import (
     discover_problem_solutions,
     load_tracks,
     problem_track_memberships,
+    write_text_if_changed,
 )
 
 NOTES_DIR = ROOT / "notes" / "problems"
@@ -165,7 +166,7 @@ def load_metadata_cache() -> dict[str, dict[str, object]]:
 
 
 def save_metadata_cache(cache: dict[str, dict[str, object]]) -> None:
-    METADATA_CACHE_PATH.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n")
+    write_text_if_changed(METADATA_CACHE_PATH, json.dumps(cache, indent=2, sort_keys=True) + "\n")
 
 
 def fetch_problem_metadata(slug: str) -> dict[str, object]:
@@ -404,7 +405,7 @@ def update_index(
     if not discovered:
         lines.append("No synced solutions detected yet.")
         lines.append("")
-        INDEX_PATH.write_text("\n".join(lines))
+        write_text_if_changed(INDEX_PATH, "\n".join(lines))
         return
 
     lines.extend(
@@ -424,7 +425,7 @@ def update_index(
         )
 
     lines.append("")
-    INDEX_PATH.write_text("\n".join(lines))
+    write_text_if_changed(INDEX_PATH, "\n".join(lines))
 
 
 def sync_problem_notes(
