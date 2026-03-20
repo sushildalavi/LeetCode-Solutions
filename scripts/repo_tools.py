@@ -120,7 +120,8 @@ def _solution_files_for_entry(entry: Path) -> list[str]:
     for path in sorted(entry.rglob("*")):
         if not path.is_file():
             continue
-        if any(part.startswith(".") for part in path.parts):
+        relative_parts = path.relative_to(entry).parts
+        if any(part.startswith(".") for part in relative_parts):
             continue
         if path.suffix.lower() not in CODE_EXTENSIONS:
             continue
@@ -130,12 +131,22 @@ def _solution_files_for_entry(entry: Path) -> list[str]:
 
 def discover_problem_solutions() -> dict[str, list[str]]:
     discovered: dict[str, set[str]] = {}
-    for entry in _top_level_problem_entries():
-        slug_source = entry.stem if entry.is_file() else entry.name
-        slug = canonical_slug(slug_source)
-        if not slug:
-            continue
-        discovered.setdefault(slug, set()).update(_solution_files_for_entry(entry))
+    for root_entry in _top_level_problem_entries():
+        entries = [root_entry]
+        if root_entry.is_dir() and root_entry.name == ".leetcode":
+            entries = [
+                path
+                for path in sorted(root_entry.iterdir())
+                if not path.name.startswith(".")
+                and (path.is_dir() or (path.is_file() and path.suffix.lower() in CODE_EXTENSIONS))
+            ]
+
+        for entry in entries:
+            slug_source = entry.stem if entry.is_file() else entry.name
+            slug = canonical_slug(slug_source)
+            if not slug:
+                continue
+            discovered.setdefault(slug, set()).update(_solution_files_for_entry(entry))
 
     return {slug: sorted(paths) for slug, paths in discovered.items()}
 
