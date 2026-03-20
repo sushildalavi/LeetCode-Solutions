@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from repo_tools import ROOT, canonical_slug, discover_problem_solutions
+from repo_tools import ROOT, canonical_slug, discover_problem_solutions, load_local_env, load_tracks
 from sync_problem_notes import (
     get_problem_metadata,
     load_metadata_cache,
@@ -43,22 +43,6 @@ Requirements:
 - `revision_notes` should be 1-3 brief bullets about key invariants, edge cases, or why the approach works.
 - Do not wrap the JSON in markdown fences.
 """.strip()
-
-
-def load_local_env() -> None:
-    env_path = ROOT / ".env"
-    if not env_path.exists():
-        return
-
-    for raw_line in env_path.read_text().splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        os.environ.setdefault(key, value)
 
 
 def extract_section_body(content: str, heading: str) -> str:
@@ -235,7 +219,9 @@ def main() -> int:
         return 0
 
     model = os.getenv("OPENAI_MODEL", DEFAULT_MODEL)
+    tracks = load_tracks()
     discovered = discover_problem_solutions()
+    cache = load_metadata_cache()
     target_slugs = (
         {canonical_slug(slug) for slug in args.slugs if canonical_slug(slug)}
         if args.slugs
@@ -246,8 +232,7 @@ def main() -> int:
         print("No synced problems found.")
         return 0
 
-    sync_problem_notes(target_slugs)
-    cache = load_metadata_cache()
+    sync_problem_notes(target_slugs, discovered=discovered, tracks=tracks, cache=cache)
 
     updated_count = 0
     for slug in sorted(target_slugs):
