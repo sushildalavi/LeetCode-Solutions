@@ -36,20 +36,20 @@ In **Pascal's triangle**, each number is the sum of the two numbers directly abo
 <!-- problem:end -->
 
 ## Problem Summary
-Construct Pascal's triangle row by row, initializing each row with 1s and filling inner entries by summing two values from the previous row.
+Builds Pascal's triangle row by row using previously computed rows. Each row is initialized with 1s and inner elements are filled as sums of two values from the prior row.
 
 ## Data Structures Used
 - Array
 - List
 
 ## Approach
-Iterate i from 0 to numRows-1, create a row of length i+1 filled with 1s, then for each inner index j (1..i-1) set row[j] = triangle[i-1][j-1] + triangle[i-1][j]; append each completed row to the triangle and return it.
+Iterate i from 0 to numRows-1, create a row of length i+1 filled with 1s, and for each inner index j (1..i-1) set row[j] = triangle[i-1][j-1] + triangle[i-1][j]; append the row to the result.
 
 ## Complexity
 - Time: O(numRows^2)
 - Space: O(numRows^2)
 
 ## Revision Notes
-- First and last elements of every row are always 1, so initialize rows with 1s and only compute inner entries.
-- Inner loop runs only when i >= 2 (range 1..i-1), so numRows = 1 or 2 are handled correctly without entering the inner loop.
-- Each element is computed once from two elements of the previous row, ensuring correctness and O(n^2) work overall.
+- First and last elements of each row remain 1, only fill indices 1..i-1 from previous row.
+- Works for edge case numRows = 1 since loop runs once producing [1].
+- Triangle stores all rows so later rows reference triangle[i-1] directly.

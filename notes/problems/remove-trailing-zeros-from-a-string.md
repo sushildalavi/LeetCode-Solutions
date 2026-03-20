@@ -40,19 +40,20 @@ Given a **positive** integer `num` represented as a string, return *the integer 
 <!-- problem:end -->
 
 ## Problem Summary
-Scan from the string's end to find the last non-zero digit and return the prefix up to it. The solution decrements an index while characters are '0' and slices the string.
+Scan from the end to drop trailing '0' characters and return the prefix up to the last non-zero digit. Uses a single backward scan and a slice to produce the result.
 
 ## Data Structures Used
 - String
+- Index pointer
 
 ## Approach
-Initialize i to the last index, decrement i while num[i] == '0', then return num[:i+1]; this removes all trailing '0' characters by finding the last non-zero position and slicing.
+Initialize an index i at the last character, decrement while characters are '0', then return the substring num[:i+1] which includes up to the last non-zero digit. This avoids building new strings in a loop.
 
 ## Complexity
 - Time: O(n)
 - Space: O(1)
 
 ## Revision Notes
-- Invariant: after the loop, i points to the last non-zero digit (or -1 if none found).
-- Edge case: if there are no trailing zeros the slice returns the original string; if all characters are '0' the result is an empty string (not expected for positive non-zero inputs).
-- Slicing up to i+1 produces the prefix containing the number without trailing zeros without character-by-character reconstruction.
+- Invariant: loop stops at the last non-zero digit (or i = -1 if all chars were '0'), so slicing num[:i+1] yields the correct prefix.
+- Edge case: input like '123' (no trailing zeros) leaves i at len(num)-1 so the full string is returned.
+- Per constraints, fully-zero input ('0') is not expected; if it occurred the code would return an empty string (i = -1).

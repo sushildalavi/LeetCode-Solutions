@@ -57,20 +57,20 @@ There are no longer two consecutive balloons of the same color. Total time = 1 +
 <!-- problem:end -->
 
 ## Problem Summary
-Scan the rope once grouping consecutive equal colors and for each group remove all but the most expensive balloon to minimize total removal time. The solution keeps running totals while iterating colors and times.
+Scan colors once and for each group of consecutive identical letters, remove all but the most expensive balloon in that group by accumulating the cheaper removal times. The solution uses a running max and total to compute the minimum cost.
 
 ## Data Structures Used
-- Two Pointers
-- Variables
+- Greedy
+- Two Variables
 
 ## Approach
-Iterate through colors and neededTime together, track the previous color and the maximum removal time in the current run of identical colors; when the current balloon matches the previous color, add the smaller of (current time, prev_max) to the answer and update prev_max to the larger time, otherwise start a new group.
+Iterate through paired (neededTime, color) values; if the color matches the previous one add the smaller of the current time and the running max to total (meaning remove the cheaper balloon) and update the running max to the larger time; if the color changes reset the running max to the current time and update prev color.
 
 ## Complexity
 - Time: O(n)
 - Space: O(1)
 
 ## Revision Notes
-- Invariant: prev_max is the maximum neededTime seen so far in the current consecutive-color group.
-- When encountering a same-color balloon, adding min(prev_max, t) effectively deletes the cheaper balloon so only the most expensive remains.
-- Edge cases: single-character or already colorful strings produce total = 0; initialization with prev_color='' and prev_max=0 handles the first element.
+- Invariant: prev_max always stores the maximum removal time seen so far within the current consecutive-color group.
+- When encountering the same color, add min(prev_max, t) — this effectively sums all times in the group except the maximum, which we keep.
+- Handles edge cases naturally: single characters or all distinct colors produce total = 0; groups of length k remove sum(group) - max(group).

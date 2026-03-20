@@ -38,20 +38,20 @@ Given the `head` of a sorted linked list, *delete all duplicates such that each 
 <!-- problem:end -->
 
 ## Problem Summary
-Iterate the sorted linked list once and remove consecutive nodes with duplicate values by skipping them in-place.
+Traverse the sorted linked list and remove consecutive nodes that have the same value by skipping them, returning the modified head. The solution modifies the list in-place without extra data structures.
 
 ## Data Structures Used
 - Linked List
-- Pointer
+- Pointers
 
 ## Approach
-Use a single pointer curr starting at head; while curr and curr.next exist, compare curr.val with curr.next.val — if equal, remove the next node by setting curr.next = curr.next.next (do not advance curr), otherwise advance curr to curr.next. Return head.
+Use a single pointer curr starting at head; while curr and curr.next exist, if curr.val equals curr.next.val skip the next node by setting curr.next = curr.next.next, otherwise advance curr to curr.next. Continue until end and return head.
 
 ## Complexity
 - Time: O(n)
 - Space: O(1)
 
 ## Revision Notes
-- The list is sorted, so duplicates (if any) always appear as consecutive nodes — only need to compare curr and curr.next.
-- When a duplicate is removed, do not advance curr so multiple same-valued nodes in a row are all skipped.
-- Handles edge cases naturally: empty list or single-node list return head unchanged.
+- Invariant: list remains sorted, so duplicates only appear in consecutive positions — it's sufficient to compare curr.val with curr.next.val.
+- Edge cases: handles empty list (head is None) and single-node list because the while condition requires curr and curr.next.
+- In-place removal is done by relinking curr.next to curr.next.next; do not advance curr when deleting to catch multiple duplicates in a row.
