@@ -34,6 +34,8 @@ IGNORED_TOP_LEVEL = {
     "venv",
 }
 
+IGNORED_DIR_NAMES = IGNORED_TOP_LEVEL | {".leetcode"}
+
 CODE_EXTENSIONS = {
     ".c",
     ".cc",
@@ -97,19 +99,38 @@ def problem_track_memberships(slug: str, tracks: dict[str, list[str]] | None = N
     return memberships or ["General Practice"]
 
 
-def _top_level_problem_entries() -> list[Path]:
+def _iter_problem_entries(base: Path, is_root: bool = False) -> list[Path]:
     entries: list[Path] = []
-    for path in sorted(ROOT.iterdir()):
-        if path.name.startswith(".") and path.name not in {".leetcode"}:
-            continue
-        if path.name in IGNORED_TOP_LEVEL:
-            continue
+    direct_problem_files: list[Path] = []
+
+    for path in sorted(base.iterdir()):
+        if path.name.startswith("."):
+            if not (is_root and path.name == ".leetcode"):
+                continue
+
         if path.is_dir():
-            entries.append(path)
+            if path.name in IGNORED_TOP_LEVEL and is_root:
+                continue
+            if path.name in IGNORED_DIR_NAMES and not (is_root and path.name == ".leetcode"):
+                continue
+
+            has_direct_solution = any(
+                child.is_file()
+                and not child.name.startswith(".")
+                and child.suffix.lower() in CODE_EXTENSIONS
+                for child in path.iterdir()
+            )
+
+            if has_direct_solution:
+                entries.append(path)
+            else:
+                entries.extend(_iter_problem_entries(path))
             continue
+
         if path.is_file() and path.suffix.lower() in CODE_EXTENSIONS:
-            entries.append(path)
-    return entries
+            direct_problem_files.append(path)
+
+    return direct_problem_files + entries
 
 
 def _solution_files_for_entry(entry: Path) -> list[str]:
@@ -131,22 +152,12 @@ def _solution_files_for_entry(entry: Path) -> list[str]:
 
 def discover_problem_solutions() -> dict[str, list[str]]:
     discovered: dict[str, set[str]] = {}
-    for root_entry in _top_level_problem_entries():
-        entries = [root_entry]
-        if root_entry.is_dir() and root_entry.name == ".leetcode":
-            entries = [
-                path
-                for path in sorted(root_entry.iterdir())
-                if not path.name.startswith(".")
-                and (path.is_dir() or (path.is_file() and path.suffix.lower() in CODE_EXTENSIONS))
-            ]
-
-        for entry in entries:
-            slug_source = entry.stem if entry.is_file() else entry.name
-            slug = canonical_slug(slug_source)
-            if not slug:
-                continue
-            discovered.setdefault(slug, set()).update(_solution_files_for_entry(entry))
+    for entry in _iter_problem_entries(ROOT, is_root=True):
+        slug_source = entry.stem if entry.is_file() else entry.name
+        slug = canonical_slug(slug_source)
+        if not slug:
+            continue
+        discovered.setdefault(slug, set()).update(_solution_files_for_entry(entry))
 
     return {slug: sorted(paths) for slug, paths in discovered.items()}
 

@@ -31,18 +31,25 @@ Tracked unique problems solved across all sheets: `0 / 293`
 - Solve on `LeetCode`
 - Let `LeetSync` push the accepted submission into this repository
 - The GitHub Action scans the synced solution names and refreshes the progress table in this README
-- The same workflow creates or updates per-problem notes in [`notes/problems/`](notes/problems) and refreshes the index at [`notes/INDEX.md`](notes/INDEX.md)
+- The same workflow creates or updates per-problem notes in [`notes/problems/`](notes/problems), syncs the problem statement, and refreshes the index at [`notes/INDEX.md`](notes/INDEX.md)
+- If the repo has an `OPENAI_API_KEY` secret, the workflow also generates a draft summary, data structures list, approach, and complexity directly from your synced accepted solution
 
 ## Knowledge Capture
 
 - Your solution code is saved by `LeetSync`
-- A note stub is generated automatically for each synced problem with:
+- A note file is generated automatically for each synced problem with:
   - LeetCode link
   - difficulty
   - topic tags
+  - synced problem statement
   - tracked sheet membership
   - synced solution paths
-- Your personal summary, chosen data structures, and exact approach go into the problem note file
+- If `OPENAI_API_KEY` is configured as a GitHub Actions secret, the note also gets an auto-generated draft for:
+  - problem summary
+  - data structures used
+  - approach
+  - time/space complexity
+- You can still edit the generated note manually afterward; existing non-`TODO` sections are preserved
 
 To save your own approach quickly after solving, use:
 
@@ -60,4 +67,4 @@ python3 scripts/update_problem_note.py two-sum \
 - `NeetCode 150` is a subset of `NeetCode 250`, so those counts intentionally overlap
 - `Striver's SDE Sheet` tracking only covers the LeetCode-backed problems from the official sheet
 - If a Striver problem is not solved on LeetCode, `LeetSync` cannot sync it into this repository
-- The repo can save question metadata automatically, but your exact reasoning is only accurate if you add it to the generated note
+- For full note automation, add `OPENAI_API_KEY` as a repository secret in GitHub Actions

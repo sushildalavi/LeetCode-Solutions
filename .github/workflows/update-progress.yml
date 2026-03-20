@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: update-progress-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -25,6 +29,12 @@ jobs:
 
       - name: Refresh knowledge notes
         run: python3 scripts/sync_problem_notes.py
+
+      - name: Generate AI note drafts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5-mini
+        run: python3 scripts/generate_ai_problem_notes.py
 
       - name: Refresh README progress
         run: python3 scripts/update_progress.py

@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import html
 import json
+import re
 import urllib.error
 import urllib.request
+from html.parser import HTMLParser
 from pathlib import Path
 
 from repo_tools import (
@@ -21,6 +24,18 @@ METADATA_CACHE_PATH = ROOT / "data" / "problem_metadata.json"
 
 METADATA_START = "<!-- metadata:begin -->"
 METADATA_END = "<!-- metadata:end -->"
+PROBLEM_START = "<!-- problem:begin -->"
+PROBLEM_END = "<!-- problem:end -->"
+
+REQUIRED_METADATA_KEYS = {
+    "title",
+    "slug",
+    "difficulty",
+    "topic_tags",
+    "url",
+    "content_html",
+    "content_markdown",
+}
 
 LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql/"
 LEETCODE_QUERY = """
@@ -29,6 +44,9 @@ query q($slug: String!) {
     title
     titleSlug
     difficulty
+    content
+    exampleTestcases
+    hints
     topicTags {
       name
       slug
@@ -36,6 +54,100 @@ query q($slug: String!) {
   }
 }
 """.strip()
+
+
+class LeetCodeHtmlToMarkdownParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self.list_depth = 0
+        self.in_pre = False
+        self.inline_code_depth = 0
+
+    def _append(self, value: str) -> None:
+        if value:
+            self.parts.append(value)
+
+    def _ensure_blank_line(self) -> None:
+        if not self.parts:
+            return
+        if self.parts[-1].endswith("\n\n"):
+            return
+        if not self.parts[-1].endswith("\n"):
+            self.parts.append("\n")
+        self.parts.append("\n")
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        del attrs
+        if tag == "p":
+            self._ensure_blank_line()
+        elif tag == "br":
+            self._append("\n")
+        elif tag in {"ul", "ol"}:
+            self.list_depth += 1
+            self._ensure_blank_line()
+        elif tag == "li":
+            indent = "  " * max(self.list_depth - 1, 0)
+            self._append(f"{indent}- ")
+        elif tag == "pre":
+            self.in_pre = True
+            self._ensure_blank_line()
+            self._append("```text\n")
+        elif tag == "code" and not self.in_pre:
+            self.inline_code_depth += 1
+            self._append("`")
+        elif tag in {"strong", "b"}:
+            self._append("**")
+        elif tag in {"em", "i"}:
+            self._append("*")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "p":
+            self._ensure_blank_line()
+        elif tag in {"ul", "ol"}:
+            self.list_depth = max(self.list_depth - 1, 0)
+            self._ensure_blank_line()
+        elif tag == "li":
+            self._append("\n")
+        elif tag == "pre":
+            if not self.parts or not self.parts[-1].endswith("\n"):
+                self._append("\n")
+            self._append("```\n\n")
+            self.in_pre = False
+        elif tag == "code" and not self.in_pre and self.inline_code_depth > 0:
+            self.inline_code_depth -= 1
+            self._append("`")
+        elif tag in {"strong", "b"}:
+            self._append("**")
+        elif tag in {"em", "i"}:
+            self._append("*")
+
+    def handle_data(self, data: str) -> None:
+        if not data:
+            return
+
+        if self.in_pre or self.inline_code_depth > 0:
+            self._append(html.unescape(data))
+            return
+
+        collapsed = re.sub(r"\s+", " ", html.unescape(data))
+        if collapsed.strip():
+            self._append(collapsed)
+
+    def markdown(self) -> str:
+        text = "".join(self.parts)
+        text = re.sub(r"[ \t]+\n", "\n", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        return text.strip()
+
+
+def html_to_markdown(content_html: str) -> str:
+    if not content_html:
+        return ""
+
+    parser = LeetCodeHtmlToMarkdownParser()
+    parser.feed(content_html)
+    return parser.markdown()
 
 
 def slug_to_title(slug: str) -> str:
@@ -66,7 +178,12 @@ def fetch_problem_metadata(slug: str) -> dict[str, object]:
     request = urllib.request.Request(
         LEETCODE_GRAPHQL_URL,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Origin": "https://leetcode.com",
+            "Referer": f"https://leetcode.com/problems/{slug}/",
+            "User-Agent": "Mozilla/5.0",
+        },
     )
 
     try:
@@ -83,19 +200,28 @@ def fetch_problem_metadata(slug: str) -> dict[str, object]:
             "difficulty": "Unknown",
             "topic_tags": [],
             "url": f"https://leetcode.com/problems/{slug}/",
+            "content_html": "",
+            "content_markdown": "",
+            "example_testcases": "",
+            "hints": [],
         }
 
+    content_html = question.get("content") or ""
     return {
         "title": question["title"],
         "slug": question["titleSlug"],
         "difficulty": question["difficulty"],
         "topic_tags": [tag["name"] for tag in question.get("topicTags", [])],
         "url": f"https://leetcode.com/problems/{question['titleSlug']}/",
+        "content_html": content_html,
+        "content_markdown": html_to_markdown(content_html),
+        "example_testcases": question.get("exampleTestcases") or "",
+        "hints": question.get("hints") or [],
     }
 
 
 def get_problem_metadata(slug: str, cache: dict[str, dict[str, object]]) -> dict[str, object]:
-    if slug not in cache:
+    if slug not in cache or not REQUIRED_METADATA_KEYS.issubset(cache[slug]):
         cache[slug] = fetch_problem_metadata(slug)
     return cache[slug]
 
@@ -155,6 +281,42 @@ def build_metadata_block(
     return "\n".join(lines)
 
 
+def build_problem_statement_block(metadata: dict[str, object]) -> str:
+    statement = str(metadata.get("content_markdown") or "").strip()
+    if not statement:
+        statement = f"See the original problem: {metadata['url']}"
+
+    return "\n".join(
+        [
+            PROBLEM_START,
+            statement,
+            PROBLEM_END,
+        ]
+    )
+
+
+def upsert_problem_statement_section(content: str, metadata: dict[str, object]) -> str:
+    block = build_problem_statement_block(metadata)
+    section = "\n".join(
+        [
+            "## Problem Statement",
+            block,
+            "",
+        ]
+    )
+
+    if PROBLEM_START in content and PROBLEM_END in content:
+        start = content.index(PROBLEM_START)
+        end = content.index(PROBLEM_END) + len(PROBLEM_END)
+        return content[:start] + block + content[end:]
+
+    insertion_anchor = "## Problem Summary"
+    if insertion_anchor in content:
+        return content.replace(insertion_anchor, section + insertion_anchor, 1)
+
+    return content.rstrip() + "\n\n" + section
+
+
 def default_note_body(
     metadata: dict[str, object],
     slug: str,
@@ -162,11 +324,15 @@ def default_note_body(
     memberships: list[str],
 ) -> str:
     metadata_block = build_metadata_block(slug, metadata, solution_paths, memberships)
+    problem_statement_block = build_problem_statement_block(metadata)
     return "\n".join(
         [
             f"# {metadata['title']}",
             "",
             metadata_block,
+            "",
+            "## Problem Statement",
+            problem_statement_block,
             "",
             "## Problem Summary",
             "TODO: Summarize the question in your own words.",
@@ -206,13 +372,13 @@ def update_note_file(
     if METADATA_START in content and METADATA_END in content:
         start = content.index(METADATA_START)
         end = content.index(METADATA_END) + len(METADATA_END)
-        updated = content[:start] + metadata_block + content[end:]
-        note_path.write_text(updated)
-        return
+        content = content[:start] + metadata_block + content[end:]
+    else:
+        title = content.splitlines()[0] if content.startswith("# ") else f"# {metadata['title']}"
+        remainder = content.split("\n", 1)[1] if "\n" in content else ""
+        content = "\n".join([title, "", metadata_block, "", remainder.lstrip("\n")])
 
-    title = content.splitlines()[0] if content.startswith("# ") else f"# {metadata['title']}"
-    remainder = content.split("\n", 1)[1] if "\n" in content else ""
-    updated = "\n".join([title, "", metadata_block, "", remainder.lstrip("\n")])
+    updated = upsert_problem_statement_section(content, metadata)
     note_path.write_text(updated)
 
 
