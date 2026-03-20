@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,6 +75,20 @@ def canonical_slug(slug: str) -> str:
     return ALIASES.get(normalized, normalized)
 
 
+def load_local_env() -> None:
+    env_path = ROOT / ".env"
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+@lru_cache(maxsize=1)
 def load_tracks() -> dict[str, list[str]]:
     raw = json.loads(TRACKS_PATH.read_text())
     tracks: dict[str, list[str]] = {}
@@ -99,10 +115,9 @@ def problem_track_memberships(slug: str, tracks: dict[str, list[str]] | None = N
     return memberships or ["General Practice"]
 
 
-def _iter_problem_entries(base: Path, is_root: bool = False) -> list[Path]:
-    entries: list[Path] = []
-    direct_problem_files: list[Path] = []
-
+def _iter_discovery_children(base: Path, *, is_root: bool) -> tuple[list[Path], list[Path]]:
+    directories: list[Path] = []
+    code_files: list[Path] = []
     for path in sorted(base.iterdir()):
         if path.name.startswith("."):
             if not (is_root and path.name == ".leetcode"):
@@ -113,52 +128,83 @@ def _iter_problem_entries(base: Path, is_root: bool = False) -> list[Path]:
                 continue
             if path.name in IGNORED_DIR_NAMES and not (is_root and path.name == ".leetcode"):
                 continue
-
-            has_direct_solution = any(
-                child.is_file()
-                and not child.name.startswith(".")
-                and child.suffix.lower() in CODE_EXTENSIONS
-                for child in path.iterdir()
-            )
-
-            if has_direct_solution:
-                entries.append(path)
-            else:
-                entries.extend(_iter_problem_entries(path))
+            directories.append(path)
             continue
 
         if path.is_file() and path.suffix.lower() in CODE_EXTENSIONS:
-            direct_problem_files.append(path)
+            code_files.append(path)
 
-    return direct_problem_files + entries
+    return directories, code_files
 
 
-def _solution_files_for_entry(entry: Path) -> list[str]:
-    if entry.is_file():
-        return [str(entry.relative_to(ROOT))]
-
-    solution_paths: list[str] = []
-    for path in sorted(entry.rglob("*")):
-        if not path.is_file():
+def _iter_entry_children(base: Path) -> tuple[list[Path], list[Path]]:
+    directories: list[Path] = []
+    direct_solution_files: list[Path] = []
+    for path in sorted(base.iterdir()):
+        if path.name.startswith("."):
             continue
-        relative_parts = path.relative_to(entry).parts
-        if any(part.startswith(".") for part in relative_parts):
+        if path.is_dir():
+            directories.append(path)
             continue
-        if path.suffix.lower() not in CODE_EXTENSIONS:
-            continue
-        solution_paths.append(str(path.relative_to(ROOT)))
+        if path.suffix.lower() in CODE_EXTENSIONS:
+            direct_solution_files.append(path)
+    return directories, direct_solution_files
+
+
+def _collect_solution_files(base: Path) -> list[str]:
+    child_directories, direct_solution_files = _iter_entry_children(base)
+    solution_paths = [str(path.relative_to(ROOT)) for path in direct_solution_files]
+    for directory in child_directories:
+        solution_paths.extend(_collect_solution_files(directory))
     return solution_paths
 
 
-def discover_problem_solutions() -> dict[str, list[str]]:
+def _merge_discovered(
+    target: dict[str, set[str]],
+    incoming: dict[str, set[str]],
+) -> None:
+    for slug, paths in incoming.items():
+        target.setdefault(slug, set()).update(paths)
+
+
+def _discover_from_candidate_dir(directory: Path) -> dict[str, set[str]]:
     discovered: dict[str, set[str]] = {}
-    for entry in _iter_problem_entries(ROOT, is_root=True):
-        slug_source = entry.stem if entry.is_file() else entry.name
-        slug = canonical_slug(slug_source)
+    child_directories, direct_solution_files = _iter_entry_children(directory)
+    if direct_solution_files:
+        slug = canonical_slug(directory.name)
+        if not slug:
+            return discovered
+
+        solution_paths = [str(path.relative_to(ROOT)) for path in direct_solution_files]
+        for child_directory in child_directories:
+            solution_paths.extend(_collect_solution_files(child_directory))
+        discovered.setdefault(slug, set()).update(solution_paths)
+        return discovered
+
+    for child_directory in child_directories:
+        _merge_discovered(discovered, _discover_from_candidate_dir(child_directory))
+    return discovered
+
+
+def _discover_problem_solutions(base: Path, *, is_root: bool = False) -> dict[str, set[str]]:
+    discovered: dict[str, set[str]] = {}
+    directories, direct_problem_files = _iter_discovery_children(base, is_root=is_root)
+
+    for path in direct_problem_files:
+        slug = canonical_slug(path.stem)
         if not slug:
             continue
-        discovered.setdefault(slug, set()).update(_solution_files_for_entry(entry))
+        discovered.setdefault(slug, set()).add(str(path.relative_to(ROOT)))
 
+    for directory in directories:
+        _merge_discovered(discovered, _discover_from_candidate_dir(directory))
+
+    return discovered
+
+
+@lru_cache(maxsize=1)
+def discover_problem_solutions() -> dict[str, list[str]]:
+    discovered = _discover_problem_solutions(ROOT, is_root=True)
     return {slug: sorted(paths) for slug, paths in discovered.items()}
 
 
