@@ -53,6 +53,22 @@ Requirements:
 """.strip()
 
 
+def load_local_env() -> None:
+    env_path = ROOT / ".env"
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
 def extract_section_body(content: str, heading: str) -> str:
     pattern = rf"## {re.escape(heading)}\n(.*?)(?=\n## |\Z)"
     match = re.search(pattern, content, flags=re.S)
@@ -239,6 +255,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    load_local_env()
     args = parse_args()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
