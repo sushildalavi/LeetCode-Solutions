@@ -1,1 +1,62 @@
-{}
+{
+  "minimum-time-to-make-rope-colorful": {
+    "content_html": "<p>Alice has <code>n</code> balloons arranged on a rope. You are given a <strong>0-indexed</strong> string <code>colors</code> where <code>colors[i]</code> is the color of the <code>i<sup>th</sup></code> balloon.</p>\n\n<p>Alice wants the rope to be <strong>colorful</strong>. She does not want <strong>two consecutive balloons</strong> to be of the same color, so she asks Bob for help. Bob can remove some balloons from the rope to make it <strong>colorful</strong>. You are given a <strong>0-indexed</strong> integer array <code>neededTime</code> where <code>neededTime[i]</code> is the time (in seconds) that Bob needs to remove the <code>i<sup>th</sup></code> balloon from the rope.</p>\n\n<p>Return <em>the <strong>minimum time</strong> Bob needs to make the rope <strong>colorful</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/13/ballon1.jpg\" style=\"width: 404px; height: 243px;\" />\n<pre>\n<strong>Input:</strong> colors = &quot;abaac&quot;, neededTime = [1,2,3,4,5]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> In the above image, &#39;a&#39; is blue, &#39;b&#39; is red, and &#39;c&#39; is green.\nBob can remove the blue balloon at index 2. This takes 3 seconds.\nThere are no longer two consecutive balloons of the same color. Total time = 3.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/13/balloon2.jpg\" style=\"width: 244px; height: 243px;\" />\n<pre>\n<strong>Input:</strong> colors = &quot;abc&quot;, neededTime = [1,2,3]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The rope is already colorful. Bob does not need to remove any balloons from the rope.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/13/balloon3.jpg\" style=\"width: 404px; height: 243px;\" />\n<pre>\n<strong>Input:</strong> colors = &quot;aabaa&quot;, neededTime = [1,2,3,4,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Bob will remove the balloons at indices 0 and 4. Each balloons takes 1 second to remove.\nThere are no longer two consecutive balloons of the same color. Total time = 1 + 1 = 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == colors.length == neededTime.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= neededTime[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>colors</code> contains only lowercase English letters.</li>\n</ul>\n",
+    "content_markdown": "Alice has `n` balloons arranged on a rope. You are given a **0-indexed** string `colors` where `colors[i]` is the color of the `ith` balloon.\n\nAlice wants the rope to be **colorful**. She does not want **two consecutive balloons** to be of the same color, so she asks Bob for help. Bob can remove some balloons from the rope to make it **colorful**. You are given a **0-indexed** integer array `neededTime` where `neededTime[i]` is the time (in seconds) that Bob needs to remove the `ith` balloon from the rope.\n\nReturn *the **minimum time** Bob needs to make the rope **colorful***.\n\n**Example 1:**\n\n```text\n\n**Input:** colors = \"abaac\", neededTime = [1,2,3,4,5]\n**Output:** 3\n**Explanation:** In the above image, 'a' is blue, 'b' is red, and 'c' is green.\nBob can remove the blue balloon at index 2. This takes 3 seconds.\nThere are no longer two consecutive balloons of the same color. Total time = 3.\n```\n\n**Example 2:**\n\n```text\n\n**Input:** colors = \"abc\", neededTime = [1,2,3]\n**Output:** 0\n**Explanation:** The rope is already colorful. Bob does not need to remove any balloons from the rope.\n```\n\n**Example 3:**\n\n```text\n\n**Input:** colors = \"aabaa\", neededTime = [1,2,3,4,1]\n**Output:** 2\n**Explanation:** Bob will remove the balloons at indices 0 and 4. Each balloons takes 1 second to remove.\nThere are no longer two consecutive balloons of the same color. Total time = 1 + 1 = 2.\n```\n\n**Constraints:**\n\n- `n == colors.length == neededTime.length`\n- `1 <= n <= 105`\n- `1 <= neededTime[i] <= 104`\n- `colors` contains only lowercase English letters.",
+    "difficulty": "Medium",
+    "example_testcases": "\"abaac\"\n[1,2,3,4,5]\n\"abc\"\n[1,2,3]\n\"aabaa\"\n[1,2,3,4,1]",
+    "hints": [
+      "Maintain the running sum and max value for repeated letters."
+    ],
+    "slug": "minimum-time-to-make-rope-colorful",
+    "title": "Minimum Time to Make Rope Colorful",
+    "topic_tags": [
+      "Array",
+      "String",
+      "Dynamic Programming",
+      "Greedy"
+    ],
+    "url": "https://leetcode.com/problems/minimum-time-to-make-rope-colorful/"
+  },
+  "pascals-triangle": {
+    "content_html": "<p>Given an integer <code>numRows</code>, return the first numRows of <strong>Pascal&#39;s triangle</strong>.</p>\n\n<p>In <strong>Pascal&#39;s triangle</strong>, each number is the sum of the two numbers directly above it as shown:</p>\n<img alt=\"\" src=\"https://upload.wikimedia.org/wikipedia/commons/0/0d/PascalTriangleAnimated2.gif\" style=\"height:240px; width:260px\" />\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> numRows = 5\n<strong>Output:</strong> [[1],[1,1],[1,2,1],[1,3,3,1],[1,4,6,4,1]]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> numRows = 1\n<strong>Output:</strong> [[1]]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= numRows &lt;= 30</code></li>\n</ul>\n",
+    "content_markdown": "Given an integer `numRows`, return the first numRows of **Pascal's triangle**.\n\nIn **Pascal's triangle**, each number is the sum of the two numbers directly above it as shown:\n\n**Example 1:**\n\n```text\n**Input:** numRows = 5\n**Output:** [[1],[1,1],[1,2,1],[1,3,3,1],[1,4,6,4,1]]\n```\n\n**Example 2:**\n\n```text\n**Input:** numRows = 1\n**Output:** [[1]]\n```\n\n**Constraints:**\n\n- `1 <= numRows <= 30`",
+    "difficulty": "Easy",
+    "example_testcases": "5\n1",
+    "hints": [],
+    "slug": "pascals-triangle",
+    "title": "Pascal's Triangle",
+    "topic_tags": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "url": "https://leetcode.com/problems/pascals-triangle/"
+  },
+  "remove-duplicates-from-sorted-list": {
+    "content_html": "<p>Given the <code>head</code> of a sorted linked list, <em>delete all duplicates such that each element appears only once</em>. Return <em>the linked list <strong>sorted</strong> as well</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/04/list1.jpg\" style=\"width: 302px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> head = [1,1,2]\n<strong>Output:</strong> [1,2]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/04/list2.jpg\" style=\"width: 542px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> head = [1,1,2,3,3]\n<strong>Output:</strong> [1,2,3]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[0, 300]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n\t<li>The list is guaranteed to be <strong>sorted</strong> in ascending order.</li>\n</ul>\n",
+    "content_markdown": "Given the `head` of a sorted linked list, *delete all duplicates such that each element appears only once*. Return *the linked list **sorted** as well*.\n\n**Example 1:**\n\n```text\n\n**Input:** head = [1,1,2]\n**Output:** [1,2]\n```\n\n**Example 2:**\n\n```text\n\n**Input:** head = [1,1,2,3,3]\n**Output:** [1,2,3]\n```\n\n**Constraints:**\n\n- The number of nodes in the list is in the range `[0, 300]`.\n- `-100 <= Node.val <= 100`\n- The list is guaranteed to be **sorted** in ascending order.",
+    "difficulty": "Easy",
+    "example_testcases": "[1,1,2]\n[1,1,2,3,3]",
+    "hints": [],
+    "slug": "remove-duplicates-from-sorted-list",
+    "title": "Remove Duplicates from Sorted List",
+    "topic_tags": [
+      "Linked List"
+    ],
+    "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-list/"
+  },
+  "remove-trailing-zeros-from-a-string": {
+    "content_html": "<p>Given a <strong>positive</strong> integer <code>num</code> represented as a string, return <em>the integer </em><code>num</code><em> without trailing zeros as a string</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;51230100&quot;\n<strong>Output:</strong> &quot;512301&quot;\n<strong>Explanation:</strong> Integer &quot;51230100&quot; has 2 trailing zeros, we remove them and return integer &quot;512301&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;123&quot;\n<strong>Output:</strong> &quot;123&quot;\n<strong>Explanation:</strong> Integer &quot;123&quot; has no trailing zeros, we return integer &quot;123&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num.length &lt;= 1000</code></li>\n\t<li><code>num</code> consists&nbsp;of only digits.</li>\n\t<li><code>num</code> doesn&#39;t&nbsp;have any leading zeros.</li>\n</ul>\n",
+    "content_markdown": "Given a **positive** integer `num` represented as a string, return *the integer *`num`* without trailing zeros as a string*.\n\n**Example 1:**\n\n```text\n\n**Input:** num = \"51230100\"\n**Output:** \"512301\"\n**Explanation:** Integer \"51230100\" has 2 trailing zeros, we remove them and return integer \"512301\".\n```\n\n**Example 2:**\n\n```text\n\n**Input:** num = \"123\"\n**Output:** \"123\"\n**Explanation:** Integer \"123\" has no trailing zeros, we return integer \"123\".\n```\n\n**Constraints:**\n\n- `1 <= num.length <= 1000`\n- `num` consists of only digits.\n- `num` doesn't have any leading zeros.",
+    "difficulty": "Easy",
+    "example_testcases": "\"51230100\"\n\"123\"",
+    "hints": [
+      "Find the last non-zero digit in num."
+    ],
+    "slug": "remove-trailing-zeros-from-a-string",
+    "title": "Remove Trailing Zeros From a String",
+    "topic_tags": [
+      "String"
+    ],
+    "url": "https://leetcode.com/problems/remove-trailing-zeros-from-a-string/"
+  }
+}
