@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from repo_tools import ROOT, canonical_slug
+from repo_tools import ROOT, canonical_slug, load_local_env
 
 SUBMISSIONS_API_URL = "https://leetcode.com/api/submissions/"
 STATE_PATH = ROOT / "data" / "leetcode_sync_state.json"
@@ -45,19 +45,6 @@ LANGUAGE_EXTENSIONS = {
     "swift": ".swift",
     "typescript": ".ts",
 }
-
-
-def load_local_env() -> None:
-    env_path = ROOT / ".env"
-    if not env_path.exists():
-        return
-
-    for raw_line in env_path.read_text().splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 def build_cookie_header() -> str | None:
