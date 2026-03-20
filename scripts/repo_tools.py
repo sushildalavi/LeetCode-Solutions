@@ -88,6 +88,13 @@ def load_local_env() -> None:
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
+def write_text_if_changed(path: Path, content: str) -> bool:
+    if path.exists() and path.read_text() == content:
+        return False
+    path.write_text(content)
+    return True
+
+
 @lru_cache(maxsize=1)
 def load_tracks() -> dict[str, list[str]]:
     raw = json.loads(TRACKS_PATH.read_text())
