@@ -33,7 +33,7 @@ jobs:
       - name: Generate AI note drafts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: gpt-5-mini
+          OPENAI_MODEL: gpt-4o-mini
         run: python3 scripts/generate_ai_problem_notes.py
 
       - name: Refresh README progress
@@ -41,12 +41,12 @@ jobs:
 
       - name: Commit generated updates
         run: |
-          if git diff --quiet -- README.md notes data/problem_metadata.json; then
+          if git diff --quiet -- .leetcode README.md notes data/problem_metadata.json; then
             echo "No generated changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md notes data/problem_metadata.json
+          git add .leetcode README.md notes data/problem_metadata.json
           git commit -m "Update DSA notes and progress"
           git push
