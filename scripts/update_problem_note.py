@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import re
 
-from repo_tools import canonical_slug
+from repo_tools import normalize_slugs
 from sync_problem_notes import note_path_for_slug, sync_problem_notes
 
 
@@ -46,7 +46,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    slug = canonical_slug(args.slug)
+    slugs = normalize_slugs([args.slug])
+    if not slugs:
+        raise RuntimeError("A valid problem slug is required.")
+    slug = next(iter(slugs))
     sync_problem_notes({slug})
 
     note_path = note_path_for_slug(slug)

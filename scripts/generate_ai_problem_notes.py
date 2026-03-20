@@ -10,24 +10,28 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from repo_tools import ROOT, canonical_slug, discover_problem_solutions, load_local_env, load_tracks
+from repo_tools import (
+    ROOT,
+    canonical_slug,
+    discover_problem_solutions,
+    load_local_env,
+    load_tracks,
+    normalize_slugs,
+)
 from sync_problem_notes import (
     get_problem_metadata,
     load_metadata_cache,
-    note_path_for_slug,
     save_metadata_cache,
     sync_problem_notes,
 )
-from update_problem_note import replace_complexity, replace_section
 
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
-DEFAULT_MODEL = "gpt-5-mini"
+DEFAULT_MODEL = "gpt-4o-mini"
+LEETCODE_DIR = ROOT / ".leetcode"
 SYSTEM_INSTRUCTIONS = """
 You generate concise LeetCode study notes from a problem statement and an accepted solution.
 Return only valid JSON with this exact shape:
 {
-  "summary": "string",
-  "data_structures": ["string"],
   "approach": "string",
   "time_complexity": "string",
   "space_complexity": "string",
@@ -36,21 +40,11 @@ Return only valid JSON with this exact shape:
 
 Requirements:
 - Ground the explanation in the provided solution code, not a generic textbook answer.
-- Keep the summary to 1-2 short sentences.
 - Keep the approach to one short paragraph.
-- `data_structures` should be short labels like "Hash Map" or "Two Pointers".
 - Complexities must be asymptotic Big-O values.
 - `revision_notes` should be 1-3 brief bullets about key invariants, edge cases, or why the approach works.
 - Do not wrap the JSON in markdown fences.
 """.strip()
-
-
-def extract_section_body(content: str, heading: str) -> str:
-    pattern = rf"## {re.escape(heading)}\n(.*?)(?=\n## |\Z)"
-    match = re.search(pattern, content, flags=re.S)
-    if not match:
-        raise RuntimeError(f"Section '{heading}' not found in note.")
-    return match.group(1).strip()
 
 
 def format_bullets(values: list[str], fallback: str) -> str:
@@ -97,7 +91,6 @@ def request_note_draft(prompt: str, api_key: str, model: str) -> dict[str, Any]:
     payload = json.dumps(
         {
             "model": model,
-            "reasoning": {"effort": "low"},
             "instructions": SYSTEM_INSTRUCTIONS,
             "input": prompt,
         }
@@ -174,34 +167,41 @@ Accepted solution files:
 """.strip()
 
 
-def apply_ai_draft(note_path: Path, draft: dict[str, Any]) -> bool:
-    content = note_path.read_text()
-    updated = content
-    data_structures = draft.get("data_structures")
+def readme_path_for_slug(slug: str) -> Path:
+    return LEETCODE_DIR / slug / "README.md"
+
+
+def has_ai_content(content: str) -> bool:
+    """Return True if the README already has a real (non-TODO) Approach section."""
+    match = re.search(r"## Approach\n(.*?)(?=\n## |\Z)", content, re.S)
+    return bool(match and match.group(1).strip() and "TODO" not in match.group(1))
+
+
+def apply_ai_to_readme(readme_path: Path, draft: dict[str, Any]) -> bool:
+    content = readme_path.read_text()
+
+    if has_ai_content(content):
+        return False
+
+    approach = str(draft.get("approach") or "TODO").strip()
+    time_c = str(draft.get("time_complexity") or "TODO")
+    space_c = str(draft.get("space_complexity") or "TODO")
     revision_notes = draft.get("revision_notes")
+    notes_text = format_bullets(revision_notes if isinstance(revision_notes, list) else [], "- TODO")
 
-    updated = replace_section(updated, "Problem Summary", str(draft.get("summary") or "TODO"))
-    updated = replace_section(
-        updated,
-        "Data Structures Used",
-        format_bullets(data_structures if isinstance(data_structures, list) else [], "TODO"),
-    )
-    updated = replace_section(updated, "Approach", str(draft.get("approach") or "TODO"))
-    updated = replace_complexity(
-        updated,
-        str(draft.get("time_complexity") or "TODO"),
-        str(draft.get("space_complexity") or "TODO"),
-    )
-    updated = replace_section(
-        updated,
-        "Revision Notes",
-        format_bullets(revision_notes if isinstance(revision_notes, list) else [], "- TODO"),
+    # Strip any existing (empty/TODO) AI sections so we don't duplicate them
+    if "## Approach" in content:
+        pos = content.find("## Approach")
+        content = content[:pos].rstrip()
+
+    ai_block = (
+        f"\n\n## Approach\n{approach}"
+        f"\n\n## Complexity\n- Time: {time_c}\n- Space: {space_c}"
+        f"\n\n## Revision Notes\n{notes_text}\n"
     )
 
-    if updated != content:
-        note_path.write_text(updated)
-        return True
-    return False
+    readme_path.write_text(content + ai_block)
+    return True
 
 
 def parse_args() -> argparse.Namespace:
@@ -223,7 +223,7 @@ def main() -> int:
     discovered = discover_problem_solutions()
     cache = load_metadata_cache()
     target_slugs = (
-        {canonical_slug(slug) for slug in args.slugs if canonical_slug(slug)}
+        normalize_slugs(args.slugs)
         if args.slugs
         else set(discovered)
     )
@@ -240,8 +240,12 @@ def main() -> int:
         if not solution_paths:
             continue
 
-        note_path = note_path_for_slug(slug)
-        if not note_path.exists():
+        readme_path = readme_path_for_slug(slug)
+        if not readme_path.exists():
+            continue
+
+        if has_ai_content(readme_path.read_text()):
+            print(f"Skipping {slug}: AI content already present.")
             continue
 
         metadata = get_problem_metadata(slug, cache)
@@ -253,9 +257,9 @@ def main() -> int:
             print(f"Skipping {slug}: {exc}")
             continue
 
-        if apply_ai_draft(note_path, draft):
+        if apply_ai_to_readme(readme_path, draft):
             updated_count += 1
-            print(f"Updated {note_path}")
+            print(f"Updated {readme_path}")
 
     save_metadata_cache(cache)
     print(f"AI-generated drafts updated: {updated_count}")

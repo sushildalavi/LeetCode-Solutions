@@ -15,6 +15,7 @@ from repo_tools import (
     canonical_slug,
     discover_problem_solutions,
     load_tracks,
+    normalize_slugs,
     problem_track_memberships,
     write_text_if_changed,
 )
@@ -443,7 +444,7 @@ def sync_problem_notes(
     if target_slugs is None:
         slugs = set(discovered)
     else:
-        slugs = {canonical_slug(slug) for slug in target_slugs if canonical_slug(slug)}
+        slugs = normalize_slugs(target_slugs)
         for slug in slugs:
             discovered.setdefault(slug, [])
 
