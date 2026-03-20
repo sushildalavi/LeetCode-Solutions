@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from repo_tools import ROOT, TRACK_LABELS, collect_solved_slugs, load_tracks
+from repo_tools import ROOT, TRACK_LABELS, collect_solved_slugs, load_tracks, write_text_if_changed
 
 README_PATH = ROOT / "README.md"
 
@@ -43,7 +43,7 @@ def update_readme(progress_block: str) -> None:
     start_index = readme.index(START_MARKER) + len(START_MARKER)
     end_index = readme.index(END_MARKER)
     updated = readme[:start_index] + "\n" + progress_block + "\n" + readme[end_index:]
-    README_PATH.write_text(updated)
+    write_text_if_changed(README_PATH, updated)
 
 
 def main() -> int:
