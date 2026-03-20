@@ -427,9 +427,17 @@ def update_index(
     INDEX_PATH.write_text("\n".join(lines))
 
 
-def sync_problem_notes(target_slugs: set[str] | None = None) -> None:
-    tracks = load_tracks()
-    discovered = discover_problem_solutions()
+def sync_problem_notes(
+    target_slugs: set[str] | None = None,
+    *,
+    discovered: dict[str, list[str]] | None = None,
+    tracks: dict[str, list[str]] | None = None,
+    cache: dict[str, dict[str, object]] | None = None,
+) -> None:
+    if tracks is None:
+        tracks = load_tracks()
+    if discovered is None:
+        discovered = discover_problem_solutions()
 
     if target_slugs is None:
         slugs = set(discovered)
@@ -438,7 +446,8 @@ def sync_problem_notes(target_slugs: set[str] | None = None) -> None:
         for slug in slugs:
             discovered.setdefault(slug, [])
 
-    cache = load_metadata_cache()
+    if cache is None:
+        cache = load_metadata_cache()
 
     for slug in sorted(slugs):
         metadata = get_problem_metadata(slug, cache)
