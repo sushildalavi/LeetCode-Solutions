@@ -30,9 +30,10 @@ Tracked unique problems solved across all sheets: `0 / 293`
 
 - Solve on `LeetCode`
 - Let `LeetSync` push the accepted submission into this repository
+- A backup GitHub Action can also pull recent accepted submissions directly from LeetCode when `LEETCODE_COOKIES` or `LEETCODE_SESSION` + `LEETCODE_CSRFTOKEN` are configured as repo secrets
 - The GitHub Action scans the synced solution names and refreshes the progress table in this README
 - The same workflow creates or updates per-problem notes in [`notes/problems/`](notes/problems), syncs the problem statement, and refreshes the index at [`notes/INDEX.md`](notes/INDEX.md)
-- If the repo has an `OPENAI_API_KEY` secret, the workflow also generates a draft summary, data structures list, approach, and complexity directly from your synced accepted solution
+- If the repo has an `OPENAI_API_KEY` secret, the workflow also refreshes the summary, data structures list, approach, and complexity directly from your latest synced accepted solution
 
 ## Knowledge Capture
 
@@ -49,7 +50,7 @@ Tracked unique problems solved across all sheets: `0 / 293`
   - data structures used
   - approach
   - time/space complexity
-- You can still edit the generated note manually afterward; existing non-`TODO` sections are preserved
+- The AI-generated sections are refreshed from the latest synced accepted solution
 
 To save your own approach quickly after solving, use:
 
@@ -68,3 +69,4 @@ python3 scripts/update_problem_note.py two-sum \
 - `Striver's SDE Sheet` tracking only covers the LeetCode-backed problems from the official sheet
 - If a Striver problem is not solved on LeetCode, `LeetSync` cannot sync it into this repository
 - For full note automation, add `OPENAI_API_KEY` as a repository secret in GitHub Actions
+- For backup LeetCode-side syncing without relying only on the extension, add `LEETCODE_COOKIES` as a repository secret, or add both `LEETCODE_SESSION` and `LEETCODE_CSRFTOKEN`

@@ -1,0 +1,57 @@
+name: Sync Recent LeetCode Submissions
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-leetcode-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync-leetcode:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Sync recent accepted submissions from LeetCode
+        env:
+          LEETCODE_COOKIES: ${{ secrets.LEETCODE_COOKIES }}
+          LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
+          LEETCODE_CSRFTOKEN: ${{ secrets.LEETCODE_CSRFTOKEN }}
+        run: python3 scripts/sync_recent_leetcode_submissions.py
+
+      - name: Refresh knowledge notes
+        run: python3 scripts/sync_problem_notes.py
+
+      - name: Generate AI note drafts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5-mini
+        run: python3 scripts/generate_ai_problem_notes.py
+
+      - name: Refresh README progress
+        run: python3 scripts/update_progress.py
+
+      - name: Commit generated updates
+        run: |
+          if git diff --quiet -- .leetcode README.md notes data/problem_metadata.json data/leetcode_sync_state.json; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .leetcode README.md notes data/problem_metadata.json data/leetcode_sync_state.json
+          git commit -m "Sync recent LeetCode submissions"
+          git push

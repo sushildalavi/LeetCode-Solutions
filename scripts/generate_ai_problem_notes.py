@@ -22,14 +22,6 @@ from update_problem_note import replace_complexity, replace_section
 
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 DEFAULT_MODEL = "gpt-5-mini"
-TARGET_SECTIONS = (
-    "Problem Summary",
-    "Data Structures Used",
-    "Approach",
-    "Complexity",
-    "Revision Notes",
-)
-
 SYSTEM_INSTRUCTIONS = """
 You generate concise LeetCode study notes from a problem statement and an accepted solution.
 Return only valid JSON with this exact shape:
@@ -75,15 +67,6 @@ def extract_section_body(content: str, heading: str) -> str:
     if not match:
         raise RuntimeError(f"Section '{heading}' not found in note.")
     return match.group(1).strip()
-
-
-def section_needs_update(content: str, heading: str) -> bool:
-    return "TODO" in extract_section_body(content, heading)
-
-
-def complexity_needs_update(content: str) -> bool:
-    body = extract_section_body(content, "Complexity")
-    return "TODO" in body
 
 
 def format_bullets(values: list[str], fallback: str) -> str:
@@ -210,42 +193,31 @@ Accepted solution files:
 def apply_ai_draft(note_path: Path, draft: dict[str, Any]) -> bool:
     content = note_path.read_text()
     updated = content
-    changed = False
+    data_structures = draft.get("data_structures")
+    revision_notes = draft.get("revision_notes")
 
-    if section_needs_update(updated, "Problem Summary"):
-        updated = replace_section(updated, "Problem Summary", str(draft.get("summary") or "TODO"))
-        changed = True
+    updated = replace_section(updated, "Problem Summary", str(draft.get("summary") or "TODO"))
+    updated = replace_section(
+        updated,
+        "Data Structures Used",
+        format_bullets(data_structures if isinstance(data_structures, list) else [], "TODO"),
+    )
+    updated = replace_section(updated, "Approach", str(draft.get("approach") or "TODO"))
+    updated = replace_complexity(
+        updated,
+        str(draft.get("time_complexity") or "TODO"),
+        str(draft.get("space_complexity") or "TODO"),
+    )
+    updated = replace_section(
+        updated,
+        "Revision Notes",
+        format_bullets(revision_notes if isinstance(revision_notes, list) else [], "- TODO"),
+    )
 
-    if section_needs_update(updated, "Data Structures Used"):
-        data_structures = draft.get("data_structures")
-        body = format_bullets(data_structures if isinstance(data_structures, list) else [], "TODO")
-        updated = replace_section(updated, "Data Structures Used", body)
-        changed = True
-
-    if section_needs_update(updated, "Approach"):
-        updated = replace_section(updated, "Approach", str(draft.get("approach") or "TODO"))
-        changed = True
-
-    if complexity_needs_update(updated):
-        updated = replace_complexity(
-            updated,
-            str(draft.get("time_complexity") or "TODO"),
-            str(draft.get("space_complexity") or "TODO"),
-        )
-        changed = True
-
-    if section_needs_update(updated, "Revision Notes"):
-        revision_notes = draft.get("revision_notes")
-        body = format_bullets(
-            revision_notes if isinstance(revision_notes, list) else [],
-            "- TODO",
-        )
-        updated = replace_section(updated, "Revision Notes", body)
-        changed = True
-
-    if changed:
+    if updated != content:
         note_path.write_text(updated)
-    return changed
+        return True
+    return False
 
 
 def parse_args() -> argparse.Namespace:
@@ -285,10 +257,6 @@ def main() -> int:
 
         note_path = note_path_for_slug(slug)
         if not note_path.exists():
-            continue
-
-        note_content = note_path.read_text()
-        if not any(section_needs_update(note_content, heading) for heading in TARGET_SECTIONS if heading != "Complexity") and not complexity_needs_update(note_content):
             continue
 
         metadata = get_problem_metadata(slug, cache)
