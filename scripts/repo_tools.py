@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Iterable
 from functools import lru_cache
 from pathlib import Path
 
@@ -73,6 +74,15 @@ def normalize_candidate(value: str) -> str:
 def canonical_slug(slug: str) -> str:
     normalized = normalize_candidate(slug)
     return ALIASES.get(normalized, normalized)
+
+
+def normalize_slugs(values: Iterable[str]) -> set[str]:
+    normalized: set[str] = set()
+    for value in values:
+        slug = canonical_slug(value)
+        if slug:
+            normalized.add(slug)
+    return normalized
 
 
 def load_local_env() -> None:
