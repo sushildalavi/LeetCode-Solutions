@@ -19,11 +19,11 @@ This repository is my long-term DSA and interview prep workspace. Accepted solut
 <!-- progress:begin -->
 | Track | Solved | Total | Progress |
 | --- | ---: | ---: | ---: |
-| NeetCode 150 | 2 | 150 | 1.3% |
-| NeetCode 250 | 2 | 250 | 0.8% |
-| Striver's SDE Sheet (LeetCode-backed) | 2 | 117 | 1.7% |
+| NeetCode 150 | 3 | 150 | 2.0% |
+| NeetCode 250 | 3 | 250 | 1.2% |
+| Striver's SDE Sheet (LeetCode-backed) | 3 | 117 | 2.6% |
 
-Tracked unique problems solved across all sheets: `3 / 293`
+Tracked unique problems solved across all sheets: `4 / 293`
 <!-- progress:end -->
 
 ## How This Repo Updates

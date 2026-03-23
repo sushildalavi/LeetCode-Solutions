@@ -9,4 +9,5 @@ This index is generated automatically from synced solutions.
 | [Pascal's Triangle](problems/pascals-triangle.md) | Easy | Striver's SDE Sheet (LeetCode-backed) | Complete |
 | [Remove Duplicates from Sorted List](problems/remove-duplicates-from-sorted-list.md) | Easy | General Practice | Complete |
 | [Remove Trailing Zeros From a String](problems/remove-trailing-zeros-from-a-string.md) | Easy | General Practice | Complete |
+| [Two Sum](problems/two-sum.md) | Easy | NeetCode 150, NeetCode 250, Striver's SDE Sheet (LeetCode-backed) | Needs details |
 | [Valid Anagram](problems/valid-anagram.md) | Easy | NeetCode 150, NeetCode 250, Striver's SDE Sheet (LeetCode-backed) | Needs details |
